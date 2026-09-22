@@ -1,0 +1,25 @@
+{
+  "model_version": "xgb-5d5da2882243",
+  "model_sha256": "5d5da288224345dea95960b7bd57b1ab0a5ceb4065e915db6f279fe527b3858f",
+  "feature_names": [
+    "log_amount",
+    "amount_ratio",
+    "count_1h",
+    "count_24h",
+    "log_sum_24h",
+    "new_device",
+    "new_country",
+    "hour_sin",
+    "hour_cos",
+    "is_ecommerce",
+    "is_atm"
+  ],
+  "review_threshold": 0.07,
+  "decline_threshold": 0.5352828282828282,
+  "data_source": "synthetic",
+  "trained_at": "2026-09-22T16:26:33.737706+00:00",
+  "seed": 42,
+  "currency": "USD",
+  "history_window_hours": 24,
+  "serialization": "xgboost-native-json"
+}

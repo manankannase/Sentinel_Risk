@@ -1,0 +1,127 @@
+name: sentinel-risk
+
+services:
+  postgres:
+    image: postgres:18.6-alpine3.23
+    environment:
+      POSTGRES_DB: sentinel
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run bootstrap}
+    volumes: [postgres-data:/var/lib/postgresql]
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinel"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt: ["no-new-privileges:true"]
+
+  redis:
+    image: redis:8.4.6-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?run bootstrap}", "--protected-mode", "yes"]
+    volumes: [redis-data:/data]
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$${REDIS_PASSWORD}\" ping | grep -q '^PONG$'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment: {REDIS_PASSWORD: "${REDIS_PASSWORD:?run bootstrap}"}
+    security_opt: ["no-new-privileges:true"]
+
+  redpanda:
+    image: redpandadata/redpanda:v25.3.17
+    command: ["redpanda", "start", "--mode=dev-container", "--smp=1", "--memory=512M", "--reserve-memory=0M", "--node-id=0", "--check=false", "--kafka-addr=internal://0.0.0.0:9092", "--advertise-kafka-addr=internal://redpanda:9092", "--set", "redpanda.auto_create_topics_enabled=false"]
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health --api-urls=http://localhost:9644"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    security_opt: ["no-new-privileges:true"]
+
+  migrate:
+    build: .
+    command: ["python", "-m", "sentinel.db", "migrate"]
+    environment:
+      SENTINEL_ENV: development
+      SENTINEL_DATABASE_URL: postgresql+psycopg://sentinel:${POSTGRES_PASSWORD}@postgres/sentinel
+      SENTINEL_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      SENTINEL_KEYS_FILE: /run/sentinel/api_keys.json
+      SENTINEL_MODEL_DIR: /app/artifacts
+      SENTINEL_MODEL_SHA256: ${MODEL_SHA256:?run bootstrap}
+      SENTINEL_ALLOWED_HOSTS: localhost,127.0.0.1,api
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./.secrets/api_keys.json:/run/sentinel/api_keys.json:ro
+    networks: [private]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+
+  api:
+    build: .
+    environment:
+      SENTINEL_ENV: development
+      SENTINEL_DATABASE_URL: postgresql+psycopg://sentinel:${POSTGRES_PASSWORD}@postgres/sentinel
+      SENTINEL_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      SENTINEL_KEYS_FILE: /run/sentinel/api_keys.json
+      SENTINEL_MODEL_DIR: /app/artifacts
+      SENTINEL_MODEL_SHA256: ${MODEL_SHA256:?run bootstrap}
+      SENTINEL_ALLOWED_HOSTS: localhost,127.0.0.1,api
+      SENTINEL_BROKER: redpanda:9092
+      SENTINEL_BROKER_PROTOCOL: PLAINTEXT
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./.secrets/api_keys.json:/run/sentinel/api_keys.json:ro
+    ports: ["127.0.0.1:${API_PORT:-8000}:8000"]
+    networks: [private, edge]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+
+  worker:
+    build: .
+    command: ["python", "-m", "sentinel.worker"]
+    environment:
+      SENTINEL_ENV: development
+      SENTINEL_DATABASE_URL: postgresql+psycopg://sentinel:${POSTGRES_PASSWORD}@postgres/sentinel
+      SENTINEL_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      SENTINEL_KEYS_FILE: /run/sentinel/api_keys.json
+      SENTINEL_MODEL_DIR: /app/artifacts
+      SENTINEL_MODEL_SHA256: ${MODEL_SHA256:?run bootstrap}
+      SENTINEL_BROKER: redpanda:9092
+      SENTINEL_BROKER_USERNAME: sentinel
+      SENTINEL_BROKER_PASSWORD: ${BROKER_PASSWORD:?run bootstrap}
+      SENTINEL_BROKER_PROTOCOL: PLAINTEXT
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./.secrets/api_keys.json:/run/sentinel/api_keys.json:ro
+    networks: [private]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redpanda: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+
+networks:
+  private: {internal: true}
+  edge: {}
+volumes:
+  postgres-data: {}
+  redis-data: {}

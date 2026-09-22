@@ -1,0 +1,15 @@
+.venv/
+.env
+.secrets/
+runtime/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+artifacts/features.parquet
+artifacts/features.csv
+artifacts/source.csv
+artifacts/feast/
+artifacts/evidently.html

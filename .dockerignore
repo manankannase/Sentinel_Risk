@@ -1,0 +1,9 @@
+.git
+.venv
+.env
+.secrets
+runtime
+artifacts/features.csv
+artifacts/source.csv
+__pycache__
+.pytest_cache
