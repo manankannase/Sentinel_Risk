@@ -46,5 +46,13 @@
     "status": "success",
     "verified_assets": 8,
     "verification": "HTTPS 200 and SHA-256 matched local tested build"
+  },
+  "dependency_follow_up": {
+    "date": "2026-10-21",
+    "advisory": "GHSA-6q48-6c7w-9gw2",
+    "package": "certifi",
+    "previous_version": "2026.7.22",
+    "fixed_version": "2026.10.19",
+    "latest_checks": "https://github.com/manankannase/Sentinel_Risk/pull/1/checks"
   }
 }

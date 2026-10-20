@@ -55,3 +55,7 @@ CI runs real PostgreSQL/Redis tests, dependency audit, demo parity, time backtes
 [CI run](https://github.com/manankannase/Sentinel_Risk/actions/runs/39412994817) passed all 60 tests (zero failures/errors/skips), dependency audit, 400 browser/Python comparisons, demo adapter checks, three time backtests, Docker build, Caddy validation and container smoke. This validates code commit `ae0187649ba1d6834b5bdbfecafd4a9f8128d97b`. The smoke request took 13.46 ms on that runner; this single observation is not a throughput benchmark or production SLA.
 
 [Pages deployment](https://github.com/manankannase/Sentinel_Risk/actions/runs/39412951768) succeeded. All eight public assets returned HTTPS 200 with SHA-256 matching the tested build. The repository homepage points to the live demo.
+
+## Dependency advisory follow-up, 21 October 2026
+
+A later scan reported [GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2) against certifi 2026.7.22. The lockfile now uses certifi 2026.10.19, the advisory’s fixed version. Historical clean scans above are point-in-time evidence; the latest PR checks govern release. Rebuild backend images to receive the patched CA bundle. The static browser build does not include Python dependencies.
