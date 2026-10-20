@@ -5,7 +5,7 @@ description = "Auditable real-time fraud risk scoring and analytics"
 requires-python = ">=3.12,<3.14"
 dependencies = [
   "fastapi>=0.115,<1", "uvicorn>=0.34,<1", "pydantic-settings>=2.8,<3",
-  "sqlalchemy>=2.0.38,<3", "psycopg[binary]>=3.2,<4", "redis>=5.2,<7",
+  "sqlalchemy>=2.0.38,<3", "psycopg[binary]>=3.3.6,<4", "redis>=5.2,<7",
   "confluent-kafka>=2.8,<3", "numpy>=2,<3", "pandas>=2.2,<3",
   "scikit-learn>=1.6,<2", "xgboost-cpu>=3.4.1,<4; sys_platform == 'linux'",
   "xgboost>=3.4.1,<4; sys_platform != 'linux'", "prometheus-client>=0.21,<1",
