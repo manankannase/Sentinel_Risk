@@ -20,11 +20,31 @@
     "known_vulnerabilities": 0,
     "packages": 68
   },
-  "clean_runner_ci": "pending",
+  "clean_runner_ci": {
+    "status": "passed",
+    "code_commit": "ae0187649ba1d6834b5bdbfecafd4a9f8128d97b",
+    "url": "https://github.com/manankannase/Sentinel_Risk/actions/runs/39412994817",
+    "tests": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "docker_build": "passed",
+    "container_smoke": "passed",
+    "caddy_configuration": "passed",
+    "dependency_audit": "no known vulnerabilities",
+    "backtest_folds_passed": 3
+  },
   "limitations": [
     "Browser UI automation disabled; no visual browser QA",
     "Local Docker build blocked by storage I/O error",
     "No real bank/payment dataset or integration",
     "No production load or live backup restore tested"
-  ]
+  ],
+  "public_deployment": {
+    "url": "https://manankannase.github.io/Sentinel_Risk/",
+    "workflow": "https://github.com/manankannase/Sentinel_Risk/actions/runs/39412951768",
+    "status": "success",
+    "verified_assets": 8,
+    "verification": "HTTPS 200 and SHA-256 matched local tested build"
+  }
 }

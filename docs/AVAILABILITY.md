@@ -6,7 +6,7 @@ At audit time the repository homepage was null, `has_pages` was false, and GitHu
 
 ## Durable public demonstration
 
-Target URL: https://manankannase.github.io/Sentinel_Risk/
+Live demo: [Sentinel Risk](https://manankannase.github.io/Sentinel_Risk/). Publication succeeded; all eight assets were verified over HTTPS against build checksums.
 
 The public build contains the synthetic INR XGBoost trees, calibration, sample transactions and browser UI. It computes scores in the browser, requires no key, sends no customer input to a backend, and stores changes only in memory. It is explicitly labeled as a browser simulation. Node checks compare browser features/scores against Python and exercise the demo API adapter. The publication branch contains only public build assets and its Pages workflow.
 

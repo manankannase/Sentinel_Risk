@@ -41,11 +41,17 @@ uv run pytest -q tests/test_postgres.py
 ## Local observations on 20 October 2026
 
 - Final local suite: 59 passed, one infrastructure error loading PostgreSQL’s `plpgsql.so`; see `docs/evidence/verification.json` for final counts.
-- Actual PostgreSQL/Redis integration: three tests passed, including concurrent requests and distributed rate limiting; the added role-grants test hit a local Docker storage I/O error. Clean-runner CI verifies that additional path.
+- Actual PostgreSQL/Redis integration: three tests passed, including concurrent requests and distributed rate limiting; the added role-grants test hit a local Docker storage I/O error. Clean-runner CI subsequently passed all 60 tests with no skips, including runtime grants.
 - Synthetic expanding backtests: all three folds passed; summarized results are in `docs/evidence/backtest.json`.
 - Installed Python dependency audit: no known vulnerabilities reported at scan time. This does not cover all OS packages, future advisories or application logic.
-- Docker build installed dependencies but the local Docker storage failed with an input/output error. Host free space was below 1 GB; no user volumes were pruned. A clean GitHub runner is the independent container-build/smoke verification path.
+- Docker build installed dependencies but the local Docker storage failed with an input/output error. Host free space was below 1 GB; no user volumes were pruned. The clean GitHub runner subsequently passed the Docker build, read-only container smoke test and Caddy configuration validation.
 - Browser automation was disabled in application settings. No claim of visual/browser QA is made. Node tests verify adapter/inference behavior, not rendering or accessibility across browsers.
 - No real banking data, bank/PSP integration, production load, regulatory certification or live backup restore was tested.
 
 CI runs real PostgreSQL/Redis tests, dependency audit, demo parity, time backtests and a read-only container smoke test. Release evidence is retained as a workflow artifact. Do not mark a failed, pending or skipped integration check as passed.
+
+## Clean-runner release result
+
+[CI run](https://github.com/manankannase/Sentinel_Risk/actions/runs/39412994817) passed all 60 tests (zero failures/errors/skips), dependency audit, 400 browser/Python comparisons, demo adapter checks, three time backtests, Docker build, Caddy validation and container smoke. This validates code commit `ae0187649ba1d6834b5bdbfecafd4a9f8128d97b`. The smoke request took 13.46 ms on that runner; this single observation is not a throughput benchmark or production SLA.
+
+[Pages deployment](https://github.com/manankannase/Sentinel_Risk/actions/runs/39412951768) succeeded. All eight public assets returned HTTPS 200 with SHA-256 matching the tested build. The repository homepage points to the live demo.
