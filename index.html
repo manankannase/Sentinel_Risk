@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Sentinel Risk — an auditable fraud decision workspace.">
+  <title>Sentinel Risk · Decision intelligence</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./app.css">
+  <script src="./demo-engine.js" defer></script><script src="./demo-api.js" defer></script><script src="./app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="login" class="login-shell">
+  <section class="login-story"><div class="brand"><span class="brand-icon">S</span> sentinel<span class="brand-suffix">/ risk</span></div>
+    <div><p class="eyebrow light">DECISION INTELLIGENCE</p><h1>See the signal.<br>Act with confidence.</h1><p>Explore a synthetic INR fraud model. For backend setup, research, and deployment instructions, visit the project repository.</p><div class="login-stats"><span>01<br><small>Score</small></span><span>02<br><small>Investigate</small></span><span>03<br><small>Validate</small></span></div></div>
+    <p class="small light">Research-backed architecture. Measurable engineering.</p>
+  </section>
+  <section class="login-form-wrap"><form id="login-form"><span class="pill">SYNTHETIC DEMONSTRATION</span><h2>Your risk workspace</h2><p class="muted">Public synthetic demo. Runs entirely in this tab. No account, payment data, or API key required.</p>
+    <label for="api-key">Demo access</label><input id="api-key" type="text" value="public-demo" readonly autocomplete="off" spellcheck="false" placeholder="Paste your private API key">
+    <button class="primary full" type="submit" id="login-button">Open workspace <span aria-hidden="true">↗</span></button>
+    <p id="login-error" role="alert" class="error"></p><p class="small muted">Uses a synthetic INR model. Changes disappear when this tab reloads.</p>
+    <div class="login-foot">Browser-only demo · No payments are processed</div></form></section>
+</div>
+<div id="workspace" class="workspace" hidden>
+  <aside class="sidebar"><div class="brand"><span class="brand-icon">S</span> sentinel<span class="brand-suffix">/ risk</span></div><p class="side-label">WORKSPACE</p>
+    <nav aria-label="Main navigation"><button class="nav active" data-page="overview"><span aria-hidden="true">◫</span> Overview</button><button class="nav" data-page="transactions"><span aria-hidden="true">⇄</span> Transactions</button><button class="nav" data-page="model"><span aria-hidden="true">◈</span> Model & health</button><button class="nav" data-page="score"><span aria-hidden="true">⊕</span> Score transaction</button></nav>
+    <div class="side-bottom"><div class="live-tag"><span></span> Public browser demo</div><p>Simulation / shadow recommendations.<br>No real financial action.</p><div class="identity"><div class="avatar">SR</div><div><strong id="identity-name">Workspace</strong><small id="identity-role"></small></div><button id="logout" class="logout" aria-label="Sign out" title="Sign out">↗</button></div></div>
+  </aside>
+  <div class="main-wrap"><header class="topbar"><span>Workspace <span class="slash">/</span> <strong id="breadcrumb">Overview</strong></span><div><span class="connection" id="connection">Connecting</span><button id="refresh" class="secondary small-button">↻ Refresh</button></div></header>
+    <main id="main" tabindex="-1"><div id="notice" role="status" class="notice" hidden></div>
+      <section id="page-overview" class="page"><div class="page-heading"><div><p class="eyebrow">YOUR TRANSACTION PULSE</p><h1>Risk, in perspective.</h1><p class="muted">A clear view of your decisions and the signals behind them.</p></div><button class="primary" data-go="score">+ Score transaction</button></div>
+        <div class="stats"><article><span>Transactions scored</span><strong id="stat-total">—</strong><small>Persisted, unique decisions</small></article><article><span>Transaction volume</span><strong id="stat-volume">—</strong><small>INR · simulated traffic</small></article><article><span>Review queue</span><strong id="stat-review">—</strong><small>Above review threshold</small></article><article><span>Average risk score</span><strong id="stat-risk">—</strong><small>Calibrated on synthetic data</small></article></div>
+        <div class="chart-grid"><article class="panel"><div class="panel-title"><h2>Transaction activity</h2><span class="subtle-label">EVENT TIME · LAST 24H</span></div><div id="activity-chart" class="activity-chart" aria-label="Hourly transaction volume"></div><div class="chart-legend"><span class="dot emerald"></span> Scored transactions <span class="muted">Hourly buckets · accepted events</span></div></article>
+          <article class="panel"><div class="panel-title"><h2>Decision mix</h2><span class="subtle-label">ALL TIME</span></div><div id="decision-chart" class="decision-chart"></div><div id="decision-legend" class="decision-legend"></div></article></div>
+        <article class="panel"><div class="panel-title"><div><h2>Latest decisions</h2><p class="muted small">Every score carries its model version and risk signals.</p></div><button class="text-button" data-go="transactions">View all ↗</button></div><div id="recent-table" class="table-wrap"></div></article>
+        <div class="evidence-banner"><div class="evidence-icon">◈</div><div><strong>Know what your model has—and hasn't—proven.</strong><p>Training and test results use synthetic data. Review the model card before interpreting performance.</p></div><button class="text-button" data-go="model">Explore evidence ↗</button></div>
+      </section>
+      <section id="page-transactions" class="page" hidden><div class="page-heading"><div><p class="eyebrow">TRACEABLE BY DESIGN</p><h1>Every decision, explained.</h1><p class="muted">Inspect transaction features and record an investigation outcome.</p></div></div>
+        <article class="panel"><div class="panel-title filters"><label for="search">Search loaded transactions<input id="search" type="search" placeholder="Customer, merchant or transaction ID"></label><label for="decision-filter">Decision<select id="decision-filter"><option value="">All decisions</option><option>APPROVE</option><option>REVIEW</option><option>DECLINE</option></select></label></div><div id="transactions-table" class="table-wrap"></div><div class="pagination"><button id="previous" class="secondary">← Previous</button><span id="page-count" class="small muted"></span><button id="next" class="secondary">Next →</button></div></article>
+      </section>
+      <section id="page-model" class="page" hidden><div class="page-heading"><div><p class="eyebrow">EVIDENCE BEFORE CONFIDENCE</p><h1>Model & system health.</h1><p class="muted">Chronological evaluation, operational status, and observed feature changes.</p></div><span class="pill">XGBOOST · NATIVE JSON</span></div>
+        <div id="model-stats" class="stats"></div><div class="chart-grid"><article class="panel"><div class="panel-title"><h2>Feature importance</h2><span class="subtle-label">MODEL GAIN</span></div><div id="importance" class="importance"></div></article><article class="panel"><div class="panel-title"><h2>System status</h2><span class="subtle-label">LIVE</span></div><div id="health-list" class="health-list"></div></article></div>
+        <div class="chart-grid"><article class="panel"><div class="panel-title"><h2>Evaluation protocol</h2></div><div id="protocol" class="protocol"></div></article><article class="panel"><div class="panel-title"><h2>Feature watch</h2></div><div id="drift" class="protocol"></div></article></div>
+      </section>
+      <section id="page-score" class="page" hidden><div class="page-heading"><div><p class="eyebrow">FROM EVENT TO EVIDENCE</p><h1>Score a transaction.</h1><p class="muted">Submit a simulated transaction to the live model and inspect its decision.</p></div><button id="sample" class="secondary">Fill sample ↗</button></div>
+        <div class="score-layout"><article class="panel"><form id="score-form"><div class="form-grid"><label>Customer ID<input name="customer_id" required pattern="[A-Za-z0-9_-]{1,64}" value="customer_demo"></label><label>Merchant ID<input name="merchant_id" required pattern="[A-Za-z0-9_-]{1,64}" value="merchant_042"></label><label>Device ID<input name="device_id" required pattern="[A-Za-z0-9_-]{1,64}" value="device_demo"></label><label>Amount (INR)<input name="amount" type="number" min="0.01" max="1000000" step="0.01" value="49.50" required></label><label>Country code<input name="country" required pattern="[A-Z]{2}" maxlength="2" value="IN"></label><label>Channel<select name="channel"><option value="ecommerce">E-commerce</option><option value="pos">Point of sale</option><option value="atm">ATM</option><option value="upi">UPI</option><option value="imps">IMPS</option><option value="neft">NEFT</option><option value="rtgs">RTGS</option></select></label></div><p class="small muted">A transaction ID and UTC timestamp are generated for each new submission. A failed request retains its ID for safe retry.</p><button id="score-submit" class="primary full">Evaluate risk ↗</button></form></article><article class="panel score-result" id="score-result"><span class="result-placeholder">◎</span><h2>Your decision appears here</h2><p class="muted">Model score, supporting signals, and the exact feature snapshot used.</p></article></div>
+      </section>
+      <footer><a href="https://github.com/manankannase/Sentinel_Risk">Source &amp; deployment guide</a> · Sentinel Risk <span>Auditable ML · Synthetic demo · INR only</span><span id="last-sync">Waiting for first refresh</span></footer>
+    </main>
+  </div>
+</div>
+<dialog id="detail"><div class="dialog-head"><div><p class="eyebrow">DECISION RECORD</p><h2>Transaction details</h2></div><button id="close-detail" class="secondary" aria-label="Close transaction details">✕</button></div><div id="detail-content"></div></dialog>
+</body></html>
