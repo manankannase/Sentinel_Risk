@@ -5,7 +5,7 @@ from uuid import uuid4
 def transaction(customer="customer_one", occurred_at=None):
     return {
         "transaction_id": str(uuid4()), "customer_id": customer, "merchant_id": "merchant_one",
-        "device_id": "device_one", "amount_minor": 4750, "currency": "USD", "country": "US",
+        "device_id": "device_one", "amount_minor": 4750, "currency": "INR", "country": "IN",
         "channel": "ecommerce", "occurred_at": (occurred_at or datetime.now(timezone.utc)).isoformat(),
     }
 
@@ -31,7 +31,10 @@ def test_rejects_future_out_of_order_and_unknown_fields(client):
     late = transaction(occurred_at=datetime.now(timezone.utc) - timedelta(minutes=5))
     assert client.post("/api/v1/score", headers=headers, json=late).status_code == 200
     old = transaction(customer=late["customer_id"], occurred_at=datetime.now(timezone.utc) - timedelta(minutes=6))
-    assert client.post("/api/v1/score", headers=headers, json=old).status_code == 409
+    response = client.post("/api/v1/score", headers=headers, json=old)
+    assert response.status_code == 200
+    assert response.json()["decision"] == "REVIEW"
+    assert any("Late" in reason for reason in response.json()["reasons"])
     bad = transaction()
     bad["unexpected"] = "x"
     assert client.post("/api/v1/score", headers=headers, json=bad).status_code == 422

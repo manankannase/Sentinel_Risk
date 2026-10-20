@@ -5,7 +5,7 @@ from sentinel.features import build_features
 
 def event(transaction_id, at, customer="customer_one", device="device_one"):
     return {"transaction_id": transaction_id, "customer_id": customer, "merchant_id": "merchant_one",
-            "device_id": device, "amount_minor": 1000, "currency": "USD", "country": "US",
+            "device_id": device, "amount_minor": 1000, "currency": "INR", "country": "IN",
             "channel": "ecommerce", "occurred_at": at.isoformat()}
 
 

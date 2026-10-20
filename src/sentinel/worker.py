@@ -10,7 +10,17 @@ from confluent_kafka.admin import AdminClient, NewTopic
 from sqlalchemy import select, text, update
 
 from sentinel.config import Settings
-from sentinel.db import consumed, engine_for, insert_ignore, now_iso, outbox, quarantine, write_transaction
+from sentinel.db import (
+    consumed,
+    engine_for,
+    insert_ignore,
+    now_iso,
+    outbox,
+    quarantine,
+    verify_schema,
+    write_transaction,
+)
+from sentinel.security import strict_json
 
 log = logging.getLogger("sentinel.worker")
 
@@ -58,17 +68,19 @@ def consume_value(engine, raw: bytes, offset_id: str):
     try:
         if not raw or len(raw) > 8192:
             raise ValueError("size")
-        event = json.loads(raw)
-        if not isinstance(event, dict) or event.get("schema_version") != 1 or not isinstance(event.get("event_id"), str):
+        event = strict_json(raw)
+        if (not isinstance(event, dict) or type(event.get("schema_version")) is not int
+                or event["schema_version"] not in {1, 2} or not isinstance(event.get("event_id"), str)):
             raise ValueError("schema")
         if len(event["event_id"]) != 36:
             raise ValueError("id")
-    except (ValueError, TypeError, UnicodeDecodeError):
+    except (ValueError, TypeError, UnicodeDecodeError, RecursionError):
         reason = "invalid message"
     with write_transaction(engine) as conn:
         if not reason:
             original = conn.execute(select(outbox.c.payload).where(outbox.c.id == event["event_id"])).scalar_one_or_none()
-            if original != event:
+            # Python considers True == 1; compare canonical JSON to enforce types as well.
+            if json.dumps(original, sort_keys=True, allow_nan=False) != json.dumps(event, sort_keys=True, allow_nan=False):
                 reason = "unknown or altered event"
         if reason:
             insert_ignore(conn, quarantine, {"id": offset_id, "digest": hashlib.sha256(raw or b"").hexdigest(),
@@ -83,13 +95,16 @@ def main():
     settings = Settings()
     cfg = kafka_config(settings)
     engine = engine_for(settings.database_url)
-    admin = AdminClient(cfg)
-    for result in admin.create_topics([NewTopic(settings.topic, num_partitions=3, replication_factor=1)], request_timeout=15).values():
-        try:
-            result.result()
-        except Exception as exc:
-            if not exc.args or not hasattr(exc.args[0], "code") or exc.args[0].code() != KafkaError.TOPIC_ALREADY_EXISTS:
-                raise
+    with engine.connect() as conn:
+        verify_schema(conn)
+    if settings.env != "production":
+        admin = AdminClient(cfg)
+        for result in admin.create_topics([NewTopic(settings.topic, num_partitions=3, replication_factor=1)], request_timeout=15).values():
+            try:
+                result.result()
+            except Exception as exc:
+                if not exc.args or not hasattr(exc.args[0], "code") or exc.args[0].code() != KafkaError.TOPIC_ALREADY_EXISTS:
+                    raise
     producer = Producer({**cfg, "enable.idempotence": True, "acks": "all", "delivery.timeout.ms": 7000, "request.timeout.ms": 4000})
     consumer = Consumer({**cfg, "group.id": "sentinel-audit-v1", "auto.offset.reset": "earliest",
                          "enable.auto.commit": False, "enable.auto.offset.store": False})

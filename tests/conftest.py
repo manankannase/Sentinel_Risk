@@ -1,5 +1,7 @@
 import hashlib
 import json
+import shutil
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -7,13 +9,12 @@ from fastapi.testclient import TestClient
 from sentinel.api import create_app
 from sentinel.config import Settings
 from sentinel.db import engine_for, initialize
-from sentinel.train import synthetic_rows, train
 
 
 @pytest.fixture(scope="session")
 def artifacts(tmp_path_factory):
     path = tmp_path_factory.mktemp("model") / "artifacts"
-    train(path, list(synthetic_rows(8000, 8)), seed=8)
+    shutil.copytree(Path(__file__).resolve().parents[1] / "artifacts/inr-v2", path)
     return path
 
 

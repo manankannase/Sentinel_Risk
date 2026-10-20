@@ -1,0 +1,22 @@
+groups:
+  - name: sentinel
+    rules:
+      - alert: SentinelUnavailable
+        expr: up{job="sentinel-api"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Sentinel metrics endpoint unavailable"}
+      - alert: SentinelOutboxStalled
+        expr: sentinel_outbox_oldest_seconds > 120
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Oldest unpublished decision is over two minutes old"}
+      - alert: SentinelInferenceFailure
+        expr: increase(sentinel_model_failures_total[5m]) > 0
+        labels: {severity: critical}
+        annotations: {summary: "Model failures are routing transactions to review"}
+      - alert: SentinelScoringLatency
+        expr: histogram_quantile(0.95, sum by (le) (rate(sentinel_scoring_seconds_bucket[5m]))) > 0.5
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Scoring p95 exceeds the initial 500 ms target"}

@@ -33,6 +33,8 @@ services:
     image: redpandadata/redpanda:v25.3.17
     command: ["redpanda", "start", "--mode=dev-container", "--smp=1", "--memory=512M", "--reserve-memory=0M", "--node-id=0", "--check=false", "--kafka-addr=internal://0.0.0.0:9092", "--advertise-kafka-addr=internal://redpanda:9092", "--set", "redpanda.auto_create_topics_enabled=false"]
     networks: [private]
+    volumes: [redpanda-data:/var/lib/redpanda/data]
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "rpk cluster health --api-urls=http://localhost:9644"]
       interval: 10s
@@ -48,8 +50,9 @@ services:
       SENTINEL_DATABASE_URL: postgresql+psycopg://sentinel:${POSTGRES_PASSWORD}@postgres/sentinel
       SENTINEL_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       SENTINEL_KEYS_FILE: /run/sentinel/api_keys.json
-      SENTINEL_MODEL_DIR: /app/artifacts
+      SENTINEL_MODEL_DIR: /app/artifacts/inr-v2
       SENTINEL_MODEL_SHA256: ${MODEL_SHA256:?run bootstrap}
+      SENTINEL_MANIFEST_SHA256: ${MANIFEST_SHA256:?run bootstrap or sync_model_digest}
       SENTINEL_ALLOWED_HOSTS: localhost,127.0.0.1,api
     volumes:
       - ./artifacts:/app/artifacts:ro
@@ -65,13 +68,17 @@ services:
 
   api:
     build: .
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 2
     environment:
       SENTINEL_ENV: development
       SENTINEL_DATABASE_URL: postgresql+psycopg://sentinel:${POSTGRES_PASSWORD}@postgres/sentinel
       SENTINEL_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       SENTINEL_KEYS_FILE: /run/sentinel/api_keys.json
-      SENTINEL_MODEL_DIR: /app/artifacts
+      SENTINEL_MODEL_DIR: /app/artifacts/inr-v2
       SENTINEL_MODEL_SHA256: ${MODEL_SHA256:?run bootstrap}
+      SENTINEL_MANIFEST_SHA256: ${MANIFEST_SHA256:?run bootstrap or sync_model_digest}
       SENTINEL_ALLOWED_HOSTS: localhost,127.0.0.1,api
       SENTINEL_BROKER: redpanda:9092
       SENTINEL_BROKER_PROTOCOL: PLAINTEXT
@@ -95,14 +102,18 @@ services:
 
   worker:
     build: .
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
     command: ["python", "-m", "sentinel.worker"]
     environment:
       SENTINEL_ENV: development
       SENTINEL_DATABASE_URL: postgresql+psycopg://sentinel:${POSTGRES_PASSWORD}@postgres/sentinel
       SENTINEL_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       SENTINEL_KEYS_FILE: /run/sentinel/api_keys.json
-      SENTINEL_MODEL_DIR: /app/artifacts
+      SENTINEL_MODEL_DIR: /app/artifacts/inr-v2
       SENTINEL_MODEL_SHA256: ${MODEL_SHA256:?run bootstrap}
+      SENTINEL_MANIFEST_SHA256: ${MANIFEST_SHA256:?run bootstrap or sync_model_digest}
       SENTINEL_BROKER: redpanda:9092
       SENTINEL_BROKER_USERNAME: sentinel
       SENTINEL_BROKER_PASSWORD: ${BROKER_PASSWORD:?run bootstrap}
@@ -125,3 +136,4 @@ networks:
 volumes:
   postgres-data: {}
   redis-data: {}
+  redpanda-data: {}

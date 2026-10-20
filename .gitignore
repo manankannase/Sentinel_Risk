@@ -13,3 +13,5 @@ artifacts/features.csv
 artifacts/source.csv
 artifacts/feast/
 artifacts/evidently.html
+
+artifacts/**/features.csv

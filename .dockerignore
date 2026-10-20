@@ -7,3 +7,9 @@ artifacts/features.csv
 artifacts/source.csv
 __pycache__
 .pytest_cache
+
+dist
+artifacts/**/features.csv
+tests
+demo
+docs

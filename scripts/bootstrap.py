@@ -3,13 +3,14 @@ import hashlib
 import json
 import os
 import secrets
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 directory = root / ".secrets"
-manifest = root / "artifacts/manifest.json"
+manifest = root / "artifacts/inr-v2/manifest.json"
 if not manifest.exists():
-    raise SystemExit("Train the model first: python -m sentinel.train --output artifacts")
+    raise SystemExit("Train the model first: python -m sentinel.train --output artifacts/inr-v2")
 if directory.exists() or (root / ".env").exists():
     raise SystemExit("Existing credentials preserved. Do not rerun bootstrap to rotate a live database password.")
 os.umask(0o077)
@@ -22,13 +23,14 @@ for name, role, tenant in [("admin", "admin", "demo"), ("analyst", "analyst", "d
     (directory / f"{name}_token").write_text(token + "\n")
     if name == "metrics":
         metrics_token = token
-    records.append({"name": name, "role": role, "tenant": tenant, "sha256": hashlib.sha256(token.encode()).hexdigest()})
+    records.append({"name": name, "role": role, "tenant": tenant, "sha256": hashlib.sha256(token.encode()).hexdigest(),
+                    "expires_at": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()})
 (directory / "api_keys.json").write_text(json.dumps(records, indent=2) + "\n")
 (directory / "metrics_token").write_text(metrics_token + "\n")
 passwords = {k: secrets.token_hex(24) for k in ["POSTGRES_PASSWORD", "REDIS_PASSWORD", "BROKER_PASSWORD", "GF_ADMIN_PASSWORD"]}
 digest = json.loads(manifest.read_text())["model_sha256"]
 env = {**passwords, "BROKER_USERNAME": "sentinel", "MODEL_SHA256": digest,
-       "API_PORT": "8000", "GRAFANA_PORT": "3000", "MLFLOW_PORT": "5000", "DOMAIN": "localhost"}
+       "MANIFEST_SHA256": hashlib.sha256(manifest.read_bytes()).hexdigest(), "API_PORT": "8000", "GRAFANA_PORT": "3000", "MLFLOW_PORT": "5000", "DOMAIN": "localhost"}
 (root / ".env").write_text("\n".join(f"{k}={v}" for k, v in env.items()) + "\n")
 # Compose secrets are host bind mounts. Containers run under non-root UID 10001;
 # files are readable inside the private 0700 parent directory, never world-traversable on host.

@@ -16,6 +16,7 @@ WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 COPY --from=builder --chown=10001:10001 /app/.venv /app/.venv
 COPY --from=builder --chown=10001:10001 /app/src /app/src
+COPY --chown=10001:10001 artifacts/inr-v2 /app/artifacts/inr-v2
 USER 10001:10001
 EXPOSE 8000
-CMD ["uvicorn", "sentinel.api:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--no-server-header"]
+CMD ["uvicorn", "sentinel.api:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--no-server-header", "--limit-concurrency", "100", "--timeout-keep-alive", "5", "--proxy-headers", "--forwarded-allow-ips", "127.0.0.1"]

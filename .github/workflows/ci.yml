@@ -1,24 +1,77 @@
 name: ci
-
 on:
   push:
+    branches-ignore: [gh-pages]
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.23
+        env:
+          POSTGRES_PASSWORD: integration-only
+          POSTGRES_USER: sentinel_test
+          POSTGRES_DB: sentinel_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U sentinel_test" --health-interval 5s
+          --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:8.4.6-alpine
+        ports: [6379:6379]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-retries 20
+    env:
+      SENTINEL_TEST_POSTGRES: postgresql+psycopg://sentinel_test:integration-only@127.0.0.1:5432/sentinel_test
+      SENTINEL_TEST_REDIS: redis://127.0.0.1:6379/0
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
         with:
           version: "0.10.9"
           enable-cache: true
       - run: uv sync --frozen
       - run: uv run ruff check .
-      - run: uv run pytest -q
-      - run: uv run pip-audit
+      - run: uv run pytest -q --junitxml=runtime/tests.xml
+      - run: uv run pip-audit --format json --output runtime/dependency-audit.json
+      - run: uv run python scripts/build_demo.py
+      - run: node tests/demo_parity.cjs && node tests/demo_flow.cjs
+      - run: uv run python scripts/backtest.py --output runtime/backtest
       - run: docker build --tag sentinel-risk:ci .
+      - name: Validate HTTPS proxy configuration
+        run: >-
+          docker run --rm
+          -e DOMAIN=validation.example.com -e ACME_EMAIL=ops@example.com
+          -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro"
+          caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Container smoke test
+        run: |
+          uv run python scripts/bootstrap.py
+          mkdir -p runtime/container
+          chmod 777 runtime/container
+          docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+            -v "$PWD/runtime/container:/app/runtime" \
+            sentinel-risk:ci python -m sentinel.db migrate
+          docker run -d --name sentinel-smoke --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges -p 127.0.0.1:8000:8000 \
+            -v "$PWD/runtime/container:/app/runtime" \
+            -v "$PWD/.secrets/api_keys.json:/app/.secrets/api_keys.json:ro" sentinel-risk:ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/readyz; then break; fi
+            sleep 2
+          done
+          uv run python scripts/smoke.py --token-file .secrets/admin_token
+          docker stop sentinel-smoke
+      - name: Retain test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verification-evidence
+          path: |
+            runtime/tests.xml
+            runtime/dependency-audit.json
+            runtime/backtest/report.json
+          retention-days: 30

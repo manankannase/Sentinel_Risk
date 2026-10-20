@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-20",
+  "baseline_commit": "6d430be",
+  "baseline_tests_passed": 6,
+  "local_suite": {
+    "passed": 59,
+    "failed": 1,
+    "failure": "PostgreSQL plpgsql.so load failed with Docker storage I/O error in runtime-grants integration test",
+    "junit": "runtime/tests-final.xml"
+  },
+  "ruff": "passed",
+  "production_compose_all_profiles": "parsed",
+  "browser_python_parity": {
+    "cases": 400,
+    "max_score_delta": 1.4716216889532063e-07
+  },
+  "demo_adapter": "passed",
+  "expanding_backtest_folds_passed": 3,
+  "dependency_audit": {
+    "known_vulnerabilities": 0,
+    "packages": 68
+  },
+  "clean_runner_ci": {
+    "status": "passed",
+    "code_commit": "ae0187649ba1d6834b5bdbfecafd4a9f8128d97b",
+    "url": "https://github.com/manankannase/Sentinel_Risk/actions/runs/39412994817",
+    "tests": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "docker_build": "passed",
+    "container_smoke": "passed",
+    "caddy_configuration": "passed",
+    "dependency_audit": "no known vulnerabilities",
+    "backtest_folds_passed": 3
+  },
+  "limitations": [
+    "Browser UI automation disabled; no visual browser QA",
+    "Local Docker build blocked by storage I/O error",
+    "No real bank/payment dataset or integration",
+    "No production load or live backup restore tested"
+  ],
+  "public_deployment": {
+    "url": "https://manankannase.github.io/Sentinel_Risk/",
+    "workflow": "https://github.com/manankannase/Sentinel_Risk/actions/runs/39412951768",
+    "status": "success",
+    "verified_assets": 8,
+    "verification": "HTTPS 200 and SHA-256 matched local tested build"
+  },
+  "dependency_follow_up": {
+    "date": "2026-10-21",
+    "advisory": "GHSA-6q48-6c7w-9gw2",
+    "package": "certifi",
+    "previous_version": "2026.7.22",
+    "fixed_version": "2026.10.19",
+    "latest_checks": "https://github.com/manankannase/Sentinel_Risk/pull/1/checks"
+  }
+}
