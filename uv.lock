@@ -2658,7 +2658,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2,<3" },
     { name = "pandas", specifier = ">=2.2,<3" },
     { name = "prometheus-client", specifier = ">=0.21,<1" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6,<4" },
     { name = "pydantic-settings", specifier = ">=2.8,<3" },
     { name = "redis", specifier = ">=5.2,<7" },
     { name = "scikit-learn", specifier = ">=1.6,<2" },
