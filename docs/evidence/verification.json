@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20",
+  "baseline_commit": "6d430be",
+  "baseline_tests_passed": 6,
+  "local_suite": {
+    "passed": 59,
+    "failed": 1,
+    "failure": "PostgreSQL plpgsql.so load failed with Docker storage I/O error in runtime-grants integration test",
+    "junit": "runtime/tests-final.xml"
+  },
+  "ruff": "passed",
+  "production_compose_all_profiles": "parsed",
+  "browser_python_parity": {
+    "cases": 400,
+    "max_score_delta": 1.4716216889532063e-07
+  },
+  "demo_adapter": "passed",
+  "expanding_backtest_folds_passed": 3,
+  "dependency_audit": {
+    "known_vulnerabilities": 0,
+    "packages": 68
+  },
+  "clean_runner_ci": "pending",
+  "limitations": [
+    "Browser UI automation disabled; no visual browser QA",
+    "Local Docker build blocked by storage I/O error",
+    "No real bank/payment dataset or integration",
+    "No production load or live backup restore tested"
+  ]
+}

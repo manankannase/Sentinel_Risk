@@ -1,0 +1,29 @@
+{
+    email {$ACME_EMAIL}
+    admin off
+    servers {
+        timeouts {
+            read_header 5s
+            read_body 10s
+            write 30s
+            idle 60s
+        }
+    }
+}
+{$DOMAIN} {
+    header {
+        -Server
+        Strict-Transport-Security "max-age=31536000"
+    }
+    @private path /metrics /api/v1/openapi.json
+    respond @private 404
+    request_body {
+        max_size 8KB
+    }
+    reverse_proxy api:8000 {
+        transport http {
+            dial_timeout 3s
+            response_header_timeout 15s
+        }
+    }
+}

@@ -1,0 +1,74 @@
+name: sentinel-risk-production
+x-app: &app
+  image: ${SENTINEL_IMAGE:?set a tested image digest}
+  env_file: ${SENTINEL_RUNTIME_ENV_FILE:-.secrets/production.env}
+  environment:
+    SENTINEL_ENV: production
+    SENTINEL_DECISION_MODE: shadow
+    SENTINEL_KEYS_FILE: /run/sentinel/credentials/api_keys.json
+    SENTINEL_MODEL_DIR: /app/artifacts/inr-v2
+  volumes:
+    - ${SENTINEL_CREDENTIALS_DIR:-./.secrets/credentials}:/run/sentinel/credentials:ro
+    - ${SENTINEL_CA_DIR:-./.secrets/ca}:/run/sentinel/ca:ro
+  read_only: true
+  tmpfs: [/tmp:size=64m,mode=1777]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 1g
+  cpus: 2
+  pids_limit: 128
+  networks: [service]
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+services:
+  migrate:
+    <<: *app
+    profiles: [maintenance]
+    env_file: ${SENTINEL_MIGRATION_ENV_FILE:-.secrets/migration.env}
+    command: [python, -m, sentinel.db, migrate]
+    restart: "no"
+  api:
+    <<: *app
+    restart: unless-stopped
+    command: [uvicorn, sentinel.api:app, --host, 0.0.0.0, --port, "8000", --no-access-log, --no-server-header, --limit-concurrency, "100", --timeout-keep-alive, "5", --proxy-headers, --forwarded-allow-ips, "172.30.19.10"]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+  worker:
+    <<: *app
+    profiles: [streaming]
+    env_file: ${SENTINEL_WORKER_ENV_FILE:-.secrets/worker.env}
+    command: [python, -m, sentinel.worker]
+    restart: unless-stopped
+  caddy:
+    image: ${CADDY_IMAGE:?set a vetted caddy image digest}
+    environment:
+      DOMAIN: ${DOMAIN:?set your public domain}
+      ACME_EMAIL: ${ACME_EMAIL:?set certificate contact}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      service:
+        ipv4_address: 172.30.19.10
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    mem_limit: 256m
+    pids_limit: 100
+networks:
+  service:
+    ipam:
+      config: [{subnet: 172.30.19.0/24}]
+volumes:
+  caddy-data: {}
+  caddy-config: {}

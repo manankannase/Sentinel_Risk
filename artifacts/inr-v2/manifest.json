@@ -1,0 +1,41 @@
+{
+  "model_version": "xgb-e898d491b89c",
+  "model_sha256": "e898d491b89c316316d2bb81ba80010280ca05dbedcdd861f13e994e529a9421",
+  "feature_names": [
+    "log_amount",
+    "amount_ratio",
+    "count_1h",
+    "count_24h",
+    "log_sum_24h",
+    "new_device",
+    "new_country",
+    "hour_sin",
+    "hour_cos",
+    "is_ecommerce",
+    "is_atm",
+    "count_5m",
+    "cold_start",
+    "new_payee",
+    "is_upi",
+    "is_transfer"
+  ],
+  "review_threshold": 0.04,
+  "decline_threshold": 0.5,
+  "data_source": "synthetic",
+  "trained_at": "2026-10-20T11:06:06.504878+00:00",
+  "seed": 42,
+  "currency": "INR",
+  "history_window_hours": 24,
+  "serialization": "xgboost-native-json",
+  "feature_version": "inr-v2",
+  "feature_timezone": "Asia/Kolkata",
+  "intended_use": "simulation-or-shadow-only",
+  "calibrated": true,
+  "calibration": {
+    "method": "sigmoid",
+    "slope": 1.0152988702264363,
+    "intercept": -1.1515821579565555
+  },
+  "dataset_sha256": "5e655449ed3490f7132aceeea8d2d34a34560801ff1ae4cc8f3d3535cc345f84",
+  "metrics_sha256": "379de8ff86379ece09fb7bcd5a23038f3f32de957b2da9d2076ea3edac83002d"
+}
